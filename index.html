@@ -1,0 +1,1558 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/statusshp_1.js"></script>
+        <script src="data/stationshp_2.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[31.812653242784425,34.61331766315286],[32.05744144752424,35.020896484481554]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 0.337,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_0;
+        map.addLayer(layer_OSMStandard_0);
+        function pop_statusshp_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(feature.properties['OBJECTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LINEID'] !== null ? autolinker.link(feature.properties['LINEID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STPOINTID'] !== null ? autolinker.link(feature.properties['STPOINTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ENDPOINTID'] !== null ? autolinker.link(feature.properties['ENDPOINTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STCOORLAT'] !== null ? autolinker.link(feature.properties['STCOORLAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STCOORLONG'] !== null ? autolinker.link(feature.properties['STCOORLONG'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ENDCOOLAT'] !== null ? autolinker.link(feature.properties['ENDCOOLAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ENDCOOLONG'] !== null ? autolinker.link(feature.properties['ENDCOOLONG'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TTLLENKM'] !== null ? autolinker.link(feature.properties['TTLLENKM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['BRANCHNO'] !== null ? autolinker.link(feature.properties['BRANCHNO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STMATZATKM'] !== null ? autolinker.link(feature.properties['STMATZATKM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ENDMAZATKM'] !== null ? autolinker.link(feature.properties['ENDMAZATKM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FCLTYTYPE'] !== null ? autolinker.link(feature.properties['FCLTYTYPE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['RAILNO'] !== null ? autolinker.link(feature.properties['RAILNO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FCSTLNFRST'] !== null ? autolinker.link(feature.properties['FCSTLNFRST'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FCENDLNFRS'] !== null ? autolinker.link(feature.properties['FCENDLNFRS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FCLTSYMBL'] !== null ? autolinker.link(feature.properties['FCLTSYMBL'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NOTE'] !== null ? autolinker.link(feature.properties['NOTE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STMLSTNKM'] !== null ? autolinker.link(feature.properties['STMLSTNKM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ENDMLSTNKM'] !== null ? autolinker.link(feature.properties['ENDMLSTNKM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['הערות'] !== null ? autolinker.link(feature.properties['הערות'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['BRANCHNO_M'] !== null ? autolinker.link(feature.properties['BRANCHNO_M'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STATUS'] !== null ? autolinker.link(feature.properties['STATUS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MAAGAN_ID'] !== null ? autolinker.link(feature.properties['MAAGAN_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MGN_TYPE'] !== null ? autolinker.link(feature.properties['MGN_TYPE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DOC_NUM'] !== null ? autolinker.link(feature.properties['DOC_NUM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MGN_UPD'] !== null ? autolinker.link(feature.properties['MGN_UPD'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NOTES'] !== null ? autolinker.link(feature.properties['NOTES'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STATUS_NAM'] !== null ? autolinker.link(feature.properties['STATUS_NAM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PLAN_NUM'] !== null ? autolinker.link(feature.properties['PLAN_NUM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DATA_SOURC'] !== null ? autolinker.link(feature.properties['DATA_SOURC'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SHAPE_LEN'] !== null ? autolinker.link(feature.properties['SHAPE_LEN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_statusshp_1_0(feature) {
+            switch(String(feature.properties['NOTE'])) {
+                case 'אחיהוד - לבנון':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(247,251,255,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'אשדוד - באר יעקב':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(245,250,254,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'אשקלון - ראשון':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(243,248,254,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'באר יעקב - הראשונים':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(241,247,253,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'באר שבע - דימונה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(238,245,252,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'באר שבע - ערד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(236,244,252,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'דימונה - אילת':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(234,243,251,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'דימונה - ירוחם':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(232,241,250,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'דימונה - צין':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(230,240,249,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'חיבור נמל חיפה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(228,239,249,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'חיבורי הנמל':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(225,237,248,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'חיפה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(223,236,247,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'חיפה - שפיים קטע מתוכנן':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(221,234,247,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'חלץ מזרח':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(219,233,246,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'חלץ מערב':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(217,232,245,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'חצבה - סדום':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(215,230,245,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'ירושלים יצחק נבון - מלחה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(213,229,244,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'כרמיאל קרית שמונה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(211,227,243,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'לוד - קרית גת':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(209,226,243,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסוף קדמה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(207,225,242,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילה לניצנה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(205,223,241,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילה לנמל כרמל א':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(202,222,240,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילה מזרחית - חדרה מזרח צומת חמד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(200,221,240,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילה מזרחית - צומת רמז חדרה מזרח':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(198,219,239,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילה מזרחית - ראש העין - לוד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(195,218,238,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילה רביעית באיילון':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(192,216,237,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילות 5 ו- 6 נתיבי איילון':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(188,215,236,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילות מהירות שורק באר שבע':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(185,213,234,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת 531':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(181,212,233,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת איילון':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(178,210,232,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת ארז':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(174,209,231,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת בית שאן – גשר חוסיין':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(171,207,229,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת ג\'נין':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(167,206,228,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת הבשור':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(164,205,227,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת החוף':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(160,203,226,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת הירדן (בית שאן חמת גדר)':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(157,201,225,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת הירקון אוניברסיטה - ראש העין':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(152,199,224,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת הכותל':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(148,196,223,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת המלך דוד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(143,194,222,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת העמק':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(139,192,221,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת זבולון':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(135,189,220,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת חלץ':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(130,187,219,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת לכיש':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(126,184,218,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת מודיעין':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(121,182,217,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת מודיעין עילית':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(117,180,216,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת ממשית – צפע':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(113,177,215,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת מנשה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(108,175,214,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת נשרים - כביש 431':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(104,172,213,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת עיר הבהדים':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(101,170,212,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'מסילת שורק':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(97,167,210,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'נהריה - חיפה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(94,165,209,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'נהריה ראש הנקרה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(90,163,207,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'נמל אשדוד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(87,160,206,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'נתב"ג - ירושלים':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(83,158,205,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'עוז שלום':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(80,155,203,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'עוקף באר שבע מזרח':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(76,153,202,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'עוקף באר שבע מערב':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(73,150,201,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'עורף הנמל בנמל אשדוד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(69,148,199,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'עכו - כרמיאל':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(66,146,198,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'עפולה - טבריה (מסילת הגליל)':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(63,143,196,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'פלשת שורק - עוקף לוד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(60,140,195,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'צומת תעופה מערב - צומת תעופה דרום':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(57,137,193,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'קטע מסילה עפולה הישנה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(54,134,192,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'קרית גת - באר שבע':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(51,131,190,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'קשת חיבור בין עיר הבהדים לרמת חובב':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(48,128,189,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'קשת מודיעין':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(46,126,187,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'קשת ראש העין - לוד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(43,123,186,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'רג"מ':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(40,120,185,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחה לאורלב':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(37,117,183,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחה לנשר':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(34,114,182,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת דשנים':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(32,111,180,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת טירת - כרמל':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(29,108,177,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת טירת יהודה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(27,105,175,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת מכולות נמל חיפה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(25,102,173,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת נמל הדרום':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(22,99,170,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת סוגת':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(20,96,168,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת עץ הזית (פ"ת)':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(18,93,166,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת פקר פלדה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(15,90,163,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת צריפין':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(13,87,161,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת קרית גת - איסכור':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(11,84,159,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת רוטנברג':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,81,156,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת רמת בקע':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,78,151,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת רמת חובב':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,74,146,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת תחנת הכוח אורות רבין':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,70,140,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'שלוחת תמר':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,67,135,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'תחנה להעלאת והורדת מטענים איירפורט סיטי':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,63,129,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'תל אביב  - לוד':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,59,124,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'תמרה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,55,118,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'תתל/ 65/ ב בהכנה':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,52,113,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'NULL':
+                    return {
+                pane: 'pane_statusshp_1',
+                opacity: 1,
+                color: 'rgba(8,48,107,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_statusshp_1');
+        map.getPane('pane_statusshp_1').style.zIndex = 401;
+        map.getPane('pane_statusshp_1').style['mix-blend-mode'] = 'normal';
+        var layer_statusshp_1 = new L.geoJson(json_statusshp_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_statusshp_1',
+            layerName: 'layer_statusshp_1',
+            pane: 'pane_statusshp_1',
+            onEachFeature: pop_statusshp_1,
+            style: style_statusshp_1_0,
+        });
+        bounds_group.addLayer(layer_statusshp_1);
+        map.addLayer(layer_statusshp_1);
+        function pop_stationshp_2(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(feature.properties['OBJECTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ASSET_NO'] !== null ? autolinker.link(feature.properties['ASSET_NO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ASSET_NAME'] !== null ? autolinker.link(feature.properties['ASSET_NAME'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['AREA_'] !== null ? autolinker.link(feature.properties['AREA_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['GEOM_AREA'] !== null ? autolinker.link(feature.properties['GEOM_AREA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['GEOM_LEN'] !== null ? autolinker.link(feature.properties['GEOM_LEN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LOCAL_C'] !== null ? autolinker.link(feature.properties['LOCAL_C'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STREET'] !== null ? autolinker.link(feature.properties['STREET'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['HOUSE'] !== null ? autolinker.link(feature.properties['HOUSE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MIKUD'] !== null ? autolinker.link(feature.properties['MIKUD'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['DOCS_NUM'] !== null ? autolinker.link(feature.properties['DOCS_NUM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MAAGAN_ID'] !== null ? autolinker.link(feature.properties['MAAGAN_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['VERSION'] !== null ? autolinker.link(feature.properties['VERSION'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PLAN_DATE'] !== null ? autolinker.link(feature.properties['PLAN_DATE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PLAN_NUM'] !== null ? autolinker.link(feature.properties['PLAN_NUM'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROJ_DATE'] !== null ? autolinker.link(feature.properties['PROJ_DATE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['PROJECT_ID'] !== null ? autolinker.link(feature.properties['PROJECT_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['USER_ID'] !== null ? autolinker.link(feature.properties['USER_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MGN_TYPE'] !== null ? autolinker.link(feature.properties['MGN_TYPE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['COV_PRJ_ID'] !== null ? autolinker.link(feature.properties['COV_PRJ_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SOURCE'] !== null ? autolinker.link(feature.properties['SOURCE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NOTE'] !== null ? autolinker.link(feature.properties['NOTE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['STATUS_1'] !== null ? autolinker.link(feature.properties['STATUS_1'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['KAV_CODE'] !== null ? autolinker.link(feature.properties['KAV_CODE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['MGN_UPD'] !== null ? autolinker.link(feature.properties['MGN_UPD'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['X'] !== null ? autolinker.link(feature.properties['X'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Y'] !== null ? autolinker.link(feature.properties['Y'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LON'] !== null ? autolinker.link(feature.properties['LON'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LAT'] !== null ? autolinker.link(feature.properties['LAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_stationshp_2_0() {
+            return {
+                pane: 'pane_stationshp_2',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,207,80,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_stationshp_2');
+        map.getPane('pane_stationshp_2').style.zIndex = 402;
+        map.getPane('pane_stationshp_2').style['mix-blend-mode'] = 'normal';
+        var layer_stationshp_2 = new L.geoJson(json_stationshp_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_stationshp_2',
+            layerName: 'layer_stationshp_2',
+            pane: 'pane_stationshp_2',
+            onEachFeature: pop_stationshp_2,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_stationshp_2_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_stationshp_2);
+        map.addLayer(layer_stationshp_2);
+        setBounds();
+        var i = 0;
+        layer_statusshp_1.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['NOTE'] !== null?String('<div style="color: #323232; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['NOTE']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_statusshp_1'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_stationshp_2.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['ASSET_NAME'] !== null?String('<div style="color: #323232; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['ASSET_NAME']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_stationshp_2'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_statusshp_1,layer_stationshp_2]);
+        map.on("zoomend", function(){
+            resetLabels([layer_statusshp_1,layer_stationshp_2]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_statusshp_1,layer_stationshp_2]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_statusshp_1,layer_stationshp_2]);
+        });
+        </script>
+    </body>
+</html>
